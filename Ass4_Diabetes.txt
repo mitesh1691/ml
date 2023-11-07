@@ -1,0 +1,133 @@
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+%matplotlib inline
+import warnings
+warnings.filterwarnings('ignore')
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn import metrics
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import scale
+
+# Load the dataset
+df = pd.read_csv("diabetes.csv")
+
+# Display the first few rows of the dataset
+print("First few rows of the dataset:")
+print(df.head())
+
+
+# Check for missing values
+print("Missing values in the dataset:")
+print(df.isnull().sum())
+
+# Summary statistics
+print("Summary statistics of the dataset:")
+print(df.describe())
+
+# Data Visualization
+plt.figure(figsize=(12, 8))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm', fmt=".2f")
+plt.title("Correlation Matrix")
+plt.show()
+
+# Pairplot for visualizing relationships between features
+sns.pairplot(df, hue='Outcome', diag_kind='kde')
+plt.show()
+
+# Box plots to visualize feature distributions
+plt.figure(figsize=(12, 8))
+for i, column in enumerate(df.columns[:-1]):
+    plt.subplot(2, 4, i + 1)
+    sns.boxplot(x='Outcome', y=column, data=df)
+plt.show()
+
+sns.countplot(data=df, x='Outcome')
+plt.title("Distribution of Outcome")
+plt.show()
+
+
+plt.figure(figsize=(12, 8))
+for i, column in enumerate(df.columns[:-1]):
+    plt.subplot(2, 4, i + 1)
+    sns.histplot(data=df, x=column, kde=True, hue='Outcome', element="step", common_norm=False)
+plt.show()
+
+
+# Data Preprocessing
+X = df.drop('Outcome', axis=1)
+y = df['Outcome']
+X = scale(X)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+
+# K-Nearest Neighbors Classifier
+knn = KNeighborsClassifier(n_neighbors=7)
+knn.fit(X_train, y_train)
+y_pred = knn.predict(X_test)
+
+# Model Evaluation
+print("Confusion matrix:")
+confusion_matrix = metrics.confusion_matrix(y_test, y_pred)
+print(confusion_matrix)
+
+
+total_misclassified = confusion_matrix[0, 1] + confusion_matrix[1, 0]
+total_examples = confusion_matrix[0, 0] + confusion_matrix[0, 1] + confusion_matrix[1, 0] + confusion_matrix[1, 1]
+error_rate = total_misclassified / total_examples
+print("Error rate:", error_rate)
+print("Accuracy:", 1 - error_rate)
+
+print("Precision score:", metrics.precision_score(y_test, y_pred))
+print("Recall score:", metrics.recall_score(y_test, y_pred))
+
+classification_report = metrics.classification_report(y_test, y_pred)
+print("Classification report:")
+print(classification_report)
+
+from sklearn.metrics import roc_curve, roc_auc_score
+
+y_pred_prob = knn.predict_proba(X_test)[:, 1]
+fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
+
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, label="ROC Curve")
+plt.plot([0, 1], [0, 1], 'k--', label="Random")
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.0])
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("ROC Curve")
+plt.legend()
+plt.show()
+
+auc = roc_auc_score(y_test, y_pred_prob)
+print("AUC:", auc)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
